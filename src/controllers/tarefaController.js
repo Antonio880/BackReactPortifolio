@@ -1,4 +1,5 @@
 import Tarefa from "../models/Tarefa.js";
+import { user } from "../models/User.js";
 
 class TarefaController {
   static async listarTarefas(req, res) {
@@ -21,9 +22,14 @@ class TarefaController {
   }
 
   static async cadastrarTarefa(req, res) {
+    const novaTarefa = req.body;
     try {
-      const novaTarefa = req.body;
-      const tarefaCriada = await Tarefa.create(novaTarefa);
+      const userEncontrado = await user.findById(novaTarefa.user);
+      if (!userEncontrado) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      const tarefaCompleta = { ...novaTarefa, user: { ...userEncontrado._doc } };
+      const tarefaCriada = await Tarefa.create(tarefaCompleta);
       res.status(201).json({ message: "criado com sucesso", tarefa: tarefaCriada });
     } catch (erro) {
       res.status(500).json({ message: `${erro.message} - falha ao cadastrar tarefa` });
